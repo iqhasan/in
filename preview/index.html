@@ -1,0 +1,224 @@
+<!doctype html>
+
+<html lang="bn">  
+<head>  
+<meta charset="utf-8" />  
+<meta name="viewport" content="width=device-width,initial-scale=1" />  
+<title>Character-Pixel Video Player</title>  
+<style>  
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans Bengali",monospace;  
+       margin:16px; background:#0b0b0b; color:#eee;}  
+  header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}  
+  label{font-size:14px}  
+  input[type="range"]{vertical-align:middle}  
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}  
+  #view{display:block;background:#000;border-radius:6px;overflow:hidden;max-width:100%}  
+  canvas{display:block; width:100%; height:auto;}  
+  .small{font-size:13px;color:#ccc}  
+  .hint{font-size:13px;color:#9aa; margin-top:8px}  
+  button{padding:6px 10px;border-radius:6px;border:none;background:#1f6feb;color:white;cursor:pointer}  
+  button.secondary{background:#444}  
+  .control-group{display:flex;gap:6px;align-items:center}  
+</style>  
+</head>  
+<body>  <header>  
+  <div style="display:flex;flex-direction:column">  
+  </div>    <div class="controls">  
+    <label class="control-group">  
+      <input id="file" type="file" accept="video/*" />  
+      <span class="small" style="margin-left:6px">ফাইল</span>  
+    </label>  <button id="camBtn" class="secondary">ওয়েবক্যাম চালু/বন্ধ</button>  
+<button id="playPause">পজ/প্লে</button>
+
+  </div>  
+</header>  <section>  
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px">  
+    <div class="control-group">  
+      <label>চিহ্ন সেট:</label>  
+      <input id="charset" type="text" value="#" style="width:160px" />  
+    </div>  <div class="control-group">  
+  <label>পিক্সেল সাইজ:</label>  
+  <input id="scale" type="range" min="2" max="18" value="8" />  
+  <span id="scaleVal" class="small">8</span>  
+</div>  
+
+<div class="control-group">  
+  <label>কালার:</label>  
+  <input id="colorToggle" type="checkbox" checked />  
+</div>  
+
+<div class="control-group">  
+  <label>ইনভার্ট:</label>  
+  <input id="invert" type="checkbox" />  
+</div>  
+
+<div class="control-group">  
+  <label>FPS limit:</label>  
+  <input id="fps" type="range" min="5" max="60" value="30" />  
+  <span id="fpsVal" class="small">30</span>  
+</div>
+
+  </div>    <div id="view">  
+    <!-- visible canvas where characters are drawn -->  
+    <canvas id="asciiCanvas"></canvas>  
+  </div>    <p class="hint">নোট: যদি ল্যাগ করে, <strong>পিক্সেল সাইজ</strong> বাড়ান (মানে কম চিহ্ন) অথবা FPS কমান।</p>  
+</section>  <!-- Hidden video + offscreen canvas -->  <video id="video" playsinline muted style="display:none"></video>
+<canvas id="offscreen" style="display:none"></canvas>
+
+<script>  
+/* Bengali commented JS: কপি-পেস্ট করে ব্রাউজারে খুলুন */  
+const fileInput = document.getElementById('file');  
+const camBtn = document.getElementById('camBtn');  
+const playPauseBtn = document.getElementById('playPause');  
+const charsetInput = document.getElementById('charset');  
+const scaleInput = document.getElementById('scale');  
+const scaleVal = document.getElementById('scaleVal');  
+const colorToggle = document.getElementById('colorToggle');  
+const invertCheckbox = document.getElementById('invert');  
+const fpsInput = document.getElementById('fps');  
+const fpsVal = document.getElementById('fpsVal');  
+  
+const video = document.getElementById('video');  
+const off = document.getElementById('offscreen');  
+const canvas = document.getElementById('asciiCanvas');  
+const ctx = canvas.getContext('2d');  
+  
+let stream = null;  
+let playing = false;  
+let lastTime = 0;  
+let frameInterval = 1000 / parseInt(fpsInput.value, 10);  
+  
+scaleVal.textContent = scaleInput.value;  
+fpsVal.textContent = fpsInput.value;  
+  
+/* ভিডিও ফাইল লোড */  
+fileInput.addEventListener('change', e=>{  
+  const f = e.target.files && e.target.files[0];  
+  if(!f) return;  
+  stopCameraIfAny();  
+  const url = URL.createObjectURL(f);  
+  video.src = url;  
+  video.play();  
+  playing = true;  
+  playPauseBtn.textContent = 'পজ/প্লে';  
+});  
+  
+/* ওয়েবক্যাম টগল */  
+camBtn.addEventListener('click', async ()=>{  
+  if(stream){  
+    stopCameraIfAny();  
+    return;  
+  }  
+  try{  
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});  
+    video.srcObject = stream;  
+    video.play();  
+    playing = true;  
+    playPauseBtn.textContent = 'পজ/প্লে';  
+  }catch(err){  
+    alert('ক্যামেরা অ্যাক্সেস মঞ্জুর হয়নি: ' + err.message);  
+  }  
+});  
+  
+function stopCameraIfAny(){  
+  if(stream){  
+    stream.getTracks().forEach(t=>t.stop());  
+    stream = null;  
+    video.pause();  
+    video.srcObject = null;  
+  }  
+}  
+  
+/* প্লে/পজ বাটন (ভিডিও পজ-অন করা) */  
+playPauseBtn.addEventListener('click', ()=>{  
+  if(video.paused) { video.play(); playing = true; playPauseBtn.textContent='পজ/প্লে'; }  
+  else { video.pause(); playing = false; playPauseBtn.textContent='প্লে/পজ'; }  
+});  
+  
+/* কন্ট্রোল হুকস */  
+scaleInput.addEventListener('input', ()=> scaleVal.textContent = scaleInput.value);  
+fpsInput.addEventListener('input', ()=> { fpsVal.textContent = fpsInput.value; frameInterval = 1000 / parseInt(fpsInput.value,10); });  
+  
+/* রেন্ডার লুপ */  
+function renderLoop(ts){  
+  requestAnimationFrame(renderLoop);  
+  if(!playing || video.readyState < 2) return; // have current data  
+  if(ts - lastTime < frameInterval) return;  
+  lastTime = ts;  
+  
+  const charSet = (charsetInput.value && charsetInput.value.length>0) ? charsetInput.value : '#:;*%@';  
+  const block = parseInt(scaleInput.value,10);  
+  
+  // Compute target cols/rows based on video dimensions and block size  
+  const vw = video.videoWidth;  
+  const vh = video.videoHeight;  
+  if(!vw || !vh) return;  
+  
+  const cols = Math.floor(vw / block);  
+  const rows = Math.floor(vh / block);  
+  
+  // Resize offscreen to small size for sampling  
+  off.width = cols;  
+  off.height = rows;  
+  const offCtx = off.getContext('2d');  
+  
+  // Draw scaled-down video to offscreen  
+  offCtx.drawImage(video, 0, 0, cols, rows);  
+  
+  // Get pixel data  
+  const img = offCtx.getImageData(0,0,cols,rows).data;  
+  
+  // Resize visible canvas to pixel-size * block size (for crisp text)  
+  // We'll draw text per block with font size roughly = block px  
+  canvas.width = cols * block;  
+  canvas.height = rows * block;  
+  
+  // background  
+  ctx.fillStyle = '#000';  
+  ctx.fillRect(0,0,canvas.width,canvas.height);  
+  
+  // set text styles  
+  // Use monospace and set baseline so characters align  
+  const fontSize = Math.max(Math.round(block*0.95), 6);  
+  ctx.font = `${fontSize}px monospace`;  
+  ctx.textBaseline = 'top';  
+  
+  const invert = invertCheckbox.checked;  
+  const colorOn = colorToggle.checked;  
+  
+  // iterate pixels  
+  let p = 0;  
+  for(let y=0;y<rows;y++){  
+    for(let x=0;x<cols;x++, p+=4){  
+      const r = img[p], g = img[p+1], b = img[p+2];  
+      // luminance (perceptual)  
+      const lum = 0.2126*r + 0.7152*g + 0.0722*b;  
+      // map luminance to charset index  
+      // if invert, reverse mapping  
+      const t = invert ? (255 - lum) : lum;  
+      const idx = Math.floor((t/255) * (charSet.length - 1));  
+      const ch = charSet[idx] || charSet[0];  
+  
+      // set fillStyle (colorize if requested)  
+      if(colorOn) ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;  
+      else {  
+        // grayscale based on lum for better contrast: use either black/white  
+        const gval = Math.round(lum);  
+        ctx.fillStyle = `rgb(${gval},${gval},${gval})`;  
+      }  
+  
+      // draw char at scaled position  
+      const px = x * block;  
+      const py = y * block;  
+      ctx.fillText(ch, px, py);  
+    }  
+  }  
+}  
+  
+// start loop  
+requestAnimationFrame(renderLoop);  
+  
+/* clean up when leaving */  
+window.addEventListener('unload', ()=> stopCameraIfAny());  
+</script>  </body>  
+</html> 
