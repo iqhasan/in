@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iQ HasaN</title>
+  <meta name="description" content="Official personal site of Mind of Hasan - YouTuber, content creator and storyteller." />
+  <meta name="keywords" content="Mind of Hasan, YouTube, TikTok" />
+  <meta name="author" content="Mind of Hasan" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+   <link rel="icon" href="favicon.png" type="image/png">
+</head>
+
+<body class="light">
+  <!-- Background Canvas -->
+  <canvas id="bg"></canvas>
+
+  <!-- Top Buttons -->
+  <div class="menu-toggle" id="menuToggle" title="Menu"><i class="fa-solid fa-bars"></i></div>
+  <div class="anim-toggle" id="animToggle" title="Switch Animation"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+  <div class="theme-toggle" id="themeToggle" title="Toggle Theme"><i class="fas fa-adjust"></i></div>
+    <!-- Share Popup -->
+  <div class="overlay" id="shareOverlay"></div>
+  <div class="popup" id="sharePopup">
+    <span class="close-btn" id="closeSharePopup">×</span>
+    <h2>Share This Page</h2>
+    <img id="qrImage" src="" alt="QR Code" />
+    <p id="shareLink"></p>
+    <button id="copyShareBtn">Copy Link</button>
+  </div>
+  
+  <!-- Sidebar Menu -->
+  <div id="menuOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="top-row">
+      <h3>Site Menu</h3>
+      <span class="close-menu" id="closeMenu" title="Close">×</span>
+    </div>
+    <nav class="menu-list">
+      <a class="menu-item" data-target="tab-home">
+  <i class="fa-solid fa-house"></i> <span>Home</span>
+</a>
+
+
+<a class="menu-item" data-target="tab-tools">
+  <i class="fa-solid fa-screwdriver-wrench"></i> <span>Tools</span>
+</a>
+
+
+<a class="menu-item" 
+   href="mailto: iqehasan@hotmail.com?subject=✉️%20যোগাযোগ&body=নামঃ%20%0D%0Aঠিকানাঃ%20%0D%0Aমন্তব্যঃ%20">
+  <i class="fa-solid fa-envelope"></i> 
+  <span>Email</span>
+    <a class="menu-item shareBtn" href="javascript:void(0)">
+  <i class="fa-solid fa-share-nodes"></i> <span>Share</span>
+</a>
+ <a class="menu-item" href="https://t.me/mindofhasan" target="_blank">
+  <i class="fa-brands fa-telegram"></i> <span>Telegram Group</span>
+</a>
+ </nav>
+  </aside>
+  
+    <div id="xup">
+    
+      <!-- more Popup -->
+  <div class="overlay" id="moreOverlay"></div>
+  <div class="popup" id="morePopup">
+    <h2>Explore New</h2>
+    
+      <a class="facebook" href="https://www.facebook.com/mindifhasan" target="_blank">
+    <i class="fab fa-facebook"></i> Facebook
+  </a>
+    
+      <a class="tiktok" href="https://www.tiktok.com/@iqohasan" target="_blank">
+    <i class="fab fa-tiktok"></i> Training Music
+  </a>
+  
+    <a class="tiktok" href="https://www.tiktok.com/@iquhasan" target="_blank">
+    <i class="fab fa-tiktok"></i>Free Music
+  </a> 
+    <marquee behavior="left" direction="5">ক্লোজ করতে খালি জায়গায় টেপ করুন।</marquee>
+  </div>
+  </div>
+  
+<div id="tab-home" class="tab-content">
+  <!-- এখানে হোম কনটেন্ট থাকবে -->
+    <div class="container" id="title">
+    <img class="profile-pic" src="mind of hasan.png" alt="Profile Picture">
+    <h1 class="username">iQ HasaN<span class="verified-badge"></span></h1>
+
+    <marquee class="cx" behavior="scroll" direction="left" scrollamount="4"
+             onmouseover="this.stop();" onmouseout="this.start();">
+      “ধোর্যই আসল শক্তি, অল্পতে তুষ্ট থাকাই আধ্যাত্মিক শান্তি” ।
+    </marquee>
+
+    <div class="links">
+      <a class="facebook" href="https://www.facebook.com/iqehasan" target="_blank"><i class="fab fa-facebook"></i>Facebook</a>
+      <a class="tiktok"   href="https://www.tiktok.com/@iqehasan" target="_blank"><i class="fab fa-tiktok"></i>TikTok ID</a>
+      <a class="youtube"  href="https://youtube.com/@iqehasan"   target="_blank"><i class="fab fa-youtube"></i>Channel</a>
+        <!-- নতুন More বাটন -->
+  <a id="moreBtn" class="more" href="javascript:void(0)">
+    <i class="fas fa-ellipsis-h"></i> More
+  </a>
+    </div>
+  </div>
+
+  
+</div>
+
+<div id="tab-tools" class="tab-content">
+  <!-- এখানে ক্রিয়েটর প্রোগ্রাম কনটেন্ট থাকবে -->
+  <hr />
+  <hr />
+  <hr />
+  <hr />
+  <div class="wrap">
+    <div class="grid">
+      
+      <a class="card" href="https://podcast.adobe.com" target="_blank" rel="noopener">
+        <div>
+          <h3 class="title"><i class="fa-solid fa-microphone"></i>Adobe Products</h3>
+          <p class="desc">এটা দিয়ে প্রফেশনালি Voice অডিও এডিটিং করা যায়</p>
+        </div>
+        <div class="meta">
+          <span class="pill"><i class="fa-solid fa-microphone"></i>Ai voice enhance</span>
+          <span>free</span>
+        </div>
+      </a>
+
+      <a class="card" href="https://remaker.ai" target="_blank" rel="noopener">
+        <div>
+          <h3 class="title"><i class="fa-solid fa-image"></i>Remaker AI</h3>
+          <p class="desc"><i class="fa-solid fa-image"></i>অনলাইন ফটো এবং এডিটিং বিষয়ক সকল টুল এখানে রয়েছে এটি সম্পূর্ণ ফ্রি</p>
+        </div>
+        <div class="meta">
+          <span class="pill"><i class="fa-solid fa-image"></i>Image AI</span>
+          <span>নতুন</span>
+        </div>
+      </a>
+
+      <a class="card" href="/preview" target="_blank" rel="noopener">
+        <div>
+          <h3 class="title"><i class="fa-solid fa-image"></i>Pixel AI Video</h3>
+          <p class="desc"><i class="fa-solid fa-image"></i>টেক্সট পিক্সেল ভিডিও প্রিভিউ দেখা ভালো CPU থাকলে স্ক্রিন রেকর্ডের মাধ্যমে সেটি কাজে লাগতে পারে</p>
+        </div>
+        <div class="meta">
+          <span class="pill"><i class="fa-solid fa-image"></i>Pixel Video</span>
+          <span>Preview</span>
+        </div>
+      </a>
+
+   
+      <a class="card" href="/export" target="_blank" rel="noopener">
+        <div>
+          <h3 class="title"><i class="fa-solid fa-image"></i>Pixel AI Video</h3>
+          <p class="desc"><i class="fa-solid fa-image"></i>টেক্সট পিক্সেল ভিডিও ব্রাউজার ভিত্তিক CPU খরচ করে এক্সপোর্ট করা হয়</p>
+        </div>
+        <div class="meta">
+          <span class="pill"><i class="fa-solid fa-image"></i>Pixel Video</span>
+          <span>Export</span>
+        </div>
+      </a>
+
+   
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!--********************************* -->
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+  <script src="main.js"></script>
+</body>
+</html>
