@@ -1,0 +1,240 @@
+<!DOCTYPE html><html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Video Pixelizer — Moving Text Variant</title>
+<style>
+  :root{--bg:#07080a;--panel:rgba(18,18,20,0.92);--muted:#9aa0a6;--accent:#53d1ff}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,-apple-system,Arial;background:var(--bg);color:#eef2f5;min-height:100vh}
+  .preview-wrap{position:fixed;left:0;right:0;top:0;height:62vh;display:flex;justify-content:center;align-items:center;z-index:20;padding:18px}
+  canvas{max-width:1100px;width:100%;height:100%;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.6);background:#000}
+  .controls-bar{position:fixed;left:0;right:0;bottom:0;background:var(--panel);backdrop-filter:blur(8px);padding:14px 18px;border-top:1px solid rgba(255,255,255,0.03);z-index:40;display:flex;flex-direction:column;gap:10px}
+  .controls-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .control{display:flex;flex-direction:column;min-width:140px}
+  label{font-size:12px;color:var(--muted);margin-bottom:6px}
+  input[type=range], select, input[type=file], input[type=text], input[type=number]{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:#fff}
+  button{background:var(--accent);border:none;color:#021;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  .small{padding:6px 8px;border-radius:8px;font-size:13px}
+  .status{color:var(--muted);font-size:13px}
+  #exportPopup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);min-width:320px;background:#0d0e10;padding:16px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.6);display:none;z-index:60}
+  #exportProgress{width:100%;height:12px;background:#111;border-radius:999px;overflow:hidden;margin-top:10px}
+  #exportProgress > div{height:100%;width:0;background:linear-gradient(90deg,#32d3ff,#6effc3)}
+  @media (max-width:900px){ .preview-wrap{height:54vh;padding:12px} .control{min-width:110px} }
+</style>
+</head>
+<body><div class="preview-wrap">
+  <canvas id="canvas"></canvas>
+</div><video id="sourceVideo" style="display:none" crossorigin="anonymous" playsinline muted></video>
+
+<div class="controls-bar">
+  <div class="controls-row">
+    <div class="control"><label>Upload Video</label><input id="videoInput" type="file" accept="video/*"></div>
+    <div class="control"><label>Block Size</label><input id="blockSize" type="range" min="1" max="64" value="100"></div>
+    <div class="control"><label>Brightness</label><input id="brightness" type="range" min="0" max="3" step="0.05" value="1"></div>
+    <div class="control"><label>Contrast</label><input id="contrast" type="range" min="0" max="2" step="0.05" value="0"></div>
+    <div class="control"><label>Characters / Emoji</label><input id="customText" type="text" value="❄️"></div>
+  </div>  <div class="controls-row">
+    <div class="control"><label>Sampling Quality</label>
+      <select id="quality"><option value="1">1 (best)</option><option value="2" selected>2 (balanced)</option><option value="4">4 (fast)</option></select></div><div class="control"><label>Color Mode</label>
+  <select id="colorMode"><option value="color">Color</option><option value="grayscale">Grayscale</option><option value="invert">Inverted</option></select></div>
+
+<div class="control"><label>Movement Mode</label>
+  <select id="moveMode"><option value="none">None (static)</option><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option><option value="both">Both</option><option value="random">Random jitter</option></select></div>
+
+<div class="control"><label>Speed</label><input id="moveSpeed" type="range" min="0" max="5" step="0.1" value="1"></div>
+
+<div class="control"><label>Amplitude (px)</label><input id="moveAmp" type="range" min="0" max="24" step="1" value="6"></div>
+
+<div style="display:flex;align-items:center;gap:8px">
+  <button id="playPause" class="small">Play</button>
+  <button id="loopToggle" class="small">Loop: On</button>
+  <button id="exportBtn" class="small">Export</button>
+  <button id="resetBtn" class="small ghost">Reset</button>
+</div>
+
+<div style="margin-left:auto;text-align:right">
+  <div class="status" id="status">Ready</div>
+</div>
+
+  </div>
+</div><div id="exportPopup" aria-hidden="true">
+  <div style="display:flex;justify-content:space-between;align-items:center"><strong>Export Settings</strong><button id="closeExport" class="ghost">Close</button></div>
+  <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+    <label>Resolution<select id="popupResolution"><option value="640x360">640×360</option><option value="1280x720" selected>1280×720</option><option value="1920x1080">1920×1080</option></select></label>
+    <label>FPS <input id="popupFPS" type="number" min="1" max="60" value="30"></label>
+    <label>Format <select id="popupFormat"><option value="webm">WebM (recommended)</option><option value="mp4">MP4</option></select></label>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+      <button id="startExportBtn">Start Export</button>
+      <button id="popupCancelBtn" class="ghost" disabled>Cancel Export</button>
+    </div>
+    <div id="exportProgress"><div></div></div>
+    <div id="exportInfo" style="color:var(--muted);font-size:13px;margin-top:6px">Ready</div>
+  </div>
+</div><script>
+// Elements
+const fileIn = document.getElementById('videoInput');
+const src = document.getElementById('sourceVideo');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const blockSizeInput = document.getElementById('blockSize');
+const brightnessInput = document.getElementById('brightness');
+const contrastInput = document.getElementById('contrast');
+const customText = document.getElementById('customText');
+const qualitySel = document.getElementById('quality');
+const colorMode = document.getElementById('colorMode');
+const moveMode = document.getElementById('moveMode');
+const moveSpeed = document.getElementById('moveSpeed');
+const moveAmp = document.getElementById('moveAmp');
+const playPauseBtn = document.getElementById('playPause');
+const loopToggleBtn = document.getElementById('loopToggle');
+const exportBtn = document.getElementById('exportBtn');
+const resetBtn = document.getElementById('resetBtn');
+const statusEl = document.getElementById('status');
+
+// export popup
+const exportPopup = document.getElementById('exportPopup');
+const closeExport = document.getElementById('closeExport');
+const startExportBtn = document.getElementById('startExportBtn');
+const popupCancelBtn = document.getElementById('popupCancelBtn');
+const exportProgressBar = document.querySelector('#exportProgress > div');
+const exportInfo = document.getElementById('exportInfo');
+const popupResolution = document.getElementById('popupResolution');
+const popupFPS = document.getElementById('popupFPS');
+const popupFormat = document.getElementById('popupFormat');
+
+let offscreen = null; let raf = null; let isPlaying = false; let isLoop = true; let exporting = false; let mediaRecorder = null; let recordedChunks = [];
+
+src.muted = true; src.playsInline = true; src.loop = isLoop;
+
+fileIn.addEventListener('change', e=>{ if(!e.target.files || !e.target.files[0]) return; const f = e.target.files[0]; const url = URL.createObjectURL(f); src.src = url; src.load(); src.addEventListener('loadedmetadata', onMeta, {once:true}); });
+
+function onMeta(){
+  // scale canvas width to a reasonable preview size
+  const maxW = Math.min(src.videoWidth, 1100);
+  canvas.width = maxW;
+  canvas.height = Math.round(maxW * src.videoHeight / src.videoWidth);
+  offscreen = document.createElement('canvas');
+  src.currentTime = 0; src.play().catch(()=>{}); isPlaying = true; playPauseBtn.textContent = 'Pause'; statusEl.textContent = 'Playing (loop: On)'; render();
+}
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function applyContrast(v, contrast){ const f = (259*(contrast*255 + 255))/(255*(259 - contrast*255)); return clamp(f*(v-128)+128,0,255); }
+
+function render(){
+  if(src.readyState < 2){ raf = requestAnimationFrame(render); return; }
+  const bSize = parseInt(blockSizeInput.value,10);
+  const bright = parseFloat(brightnessInput.value);
+  const cont = parseFloat(contrastInput.value);
+  const cmap = customText.value || '█';
+  const q = parseInt(qualitySel.value,10);
+  const mmode = moveMode.value;
+  const speed = parseFloat(moveSpeed.value);
+  const amp = parseFloat(moveAmp.value);
+
+  const sampleW = Math.max(1, Math.round(canvas.width / bSize / q));
+  const sampleH = Math.max(1, Math.round(canvas.height / bSize / q));
+  offscreen.width = sampleW; offscreen.height = sampleH;
+  const offCtx = offscreen.getContext('2d');
+  offCtx.drawImage(src, 0, 0, sampleW, sampleH);
+  const data = offCtx.getImageData(0,0,sampleW,sampleH).data;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.textBaseline = 'top'; ctx.font = `${bSize}px monospace`;
+  const chars = Array.from(cmap);
+  const now = performance.now() / 1000; // seconds
+
+  for(let y=0;y<sampleH;y++){
+    for(let x=0;x<sampleW;x++){
+      const i = (y*sampleW + x)*4;
+      let r = data[i], g = data[i+1], b = data[i+2];
+      r = clamp(r*bright,0,255); g = clamp(g*bright,0,255); b = clamp(b*bright,0,255);
+      r = applyContrast(r, cont); g = applyContrast(g, cont); b = applyContrast(b, cont);
+      let avg = (r+g+b)/3;
+      if(colorMode.value === 'grayscale'){ r = g = b = avg; } else if(colorMode.value === 'invert'){ r = 255-r; g = 255-g; b = 255-b; }
+      const idx = Math.floor((avg/255) * (chars.length - 1)); const ch = chars[idx] || chars[0];
+
+      // compute base position
+      const baseX = Math.floor(x * bSize * q);
+      const baseY = Math.floor(y * bSize * q);
+
+      // movement offsets per mode
+      let offsetX = 0, offsetY = 0;
+      if(mmode === 'horizontal' || mmode === 'both'){
+        offsetX = Math.sin((now * speed) + (x*0.3) + (y*0.1)) * amp;
+      }
+      if(mmode === 'vertical' || mmode === 'both'){
+        offsetY = Math.cos((now * speed) + (y*0.3) + (x*0.1)) * amp;
+      }
+      if(mmode === 'random'){
+        // small pseudo-random jitter based on cell indices and time
+        offsetX = (Math.sin(now*5 + x*12.9898 + y*78.233) * 43758.5453 % 1 - 0.5) * amp;
+        offsetY = (Math.cos(now*3 + x*93.9898 + y*54.233) * 12345.6789 % 1 - 0.5) * amp;
+      }
+
+      ctx.fillStyle = `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+      ctx.fillText(ch, baseX + offsetX, baseY + offsetY);
+    }
+  }
+
+  raf = requestAnimationFrame(render);
+}
+
+// play/pause
+playPauseBtn.addEventListener('click', ()=>{
+  if(!src.src) return;
+  if(isPlaying){ src.pause(); isPlaying = false; playPauseBtn.textContent = 'Play'; statusEl.textContent = 'Paused'; }
+  else { src.play().catch(()=>{}); isPlaying = true; playPauseBtn.textContent = 'Pause'; statusEl.textContent = 'Playing (loop: ' + (isLoop? 'On':'Off') + ')'; }
+});
+
+// loop toggle
+loopToggleBtn.addEventListener('click', ()=>{ isLoop = !isLoop; src.loop = isLoop; loopToggleBtn.textContent = 'Loop: ' + (isLoop? 'On':'Off'); statusEl.textContent = isPlaying? 'Playing (loop: ' + (isLoop? 'On':'Off') + ')' : 'Paused'; });
+
+// reset
+resetBtn.addEventListener('click', ()=>{ blockSizeInput.value = 12; brightnessInput.value = 1.2; contrastInput.value = 1.05; customText.value = '0'; qualitySel.value = 2; colorMode.value='color'; moveMode.value='none'; moveSpeed.value=1; moveAmp.value=6; statusEl.textContent='Reset'; });
+
+// export popup open/close
+exportBtn.addEventListener('click', ()=>{ exportPopup.style.display='block'; exportPopup.setAttribute('aria-hidden','false'); });
+closeExport.addEventListener('click', ()=>{ if(exporting) return; exportPopup.style.display='none'; });
+
+// Export: uses canvas.captureStream similar to previous variants
+startExportBtn.addEventListener('click', async ()=>{
+  if(!src.src){ alert('প্রথমে ভিডিও আপলোড করুন'); return; }
+  if(exporting) return; exporting = true; startExportBtn.disabled = true; popupCancelBtn.disabled = false; statusEl.textContent = 'Export running';
+
+  const [w,h] = popupResolution.value.split('x').map(Number); const fps = clamp(parseInt(popupFPS.value,10)||30,1,60); const fmt = popupFormat.value;
+  const origW = canvas.width, origH = canvas.height; const aspect = origW / origH; let targetW = w, targetH = h;
+  if(Math.abs((w/h) - aspect) > 0.01){ if(w/h > aspect){ targetH = h; targetW = Math.round(h * aspect); } else { targetW = w; targetH = Math.round(w / aspect); } }
+
+  canvas.width = targetW; canvas.height = targetH;
+
+  const stream = canvas.captureStream(fps);
+  let mime = fmt === 'mp4' ? 'video/mp4' : 'video/webm;codecs=vp9'; if(!MediaRecorder.isTypeSupported(mime)){ mime = 'video/webm;codecs=vp8'; if(!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm'; }
+  try{ mediaRecorder = new MediaRecorder(stream, {mimeType: mime}); } catch(err){ alert('Export unsupported in this browser. Use WebM.'); exporting=false; canvas.width=origW; canvas.height=origH; return; }
+  recordedChunks = [];
+  mediaRecorder.ondataavailable = e => { if(e.data && e.data.size) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = ()=>{
+    const blob = new Blob(recordedChunks, {type: mime}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `pixel_moving.${fmt==='mp4'?'mp4':'webm'}`; a.click();
+    canvas.width = origW; canvas.height = origH; exporting=false; startExportBtn.disabled=false; popupCancelBtn.disabled=true; exportPopup.style.display='none'; exportProgressBar.style.width='0%'; exportInfo.textContent='Export finished'; statusEl.textContent='No export running';
+  };
+
+  // temporarily disable loop to let video end
+  const prevLoop = src.loop; src.loop = false;
+  mediaRecorder.start(250);
+  exportInfo.textContent = 'Recording...'; exportProgressBar.style.width='0%';
+
+  src.currentTime = 0; await src.play().catch(()=>{});
+  const duration = src.duration || 0;
+  function progressTick(){ if(!exporting) return; const pct = duration ? Math.min((src.currentTime / duration)*100,100) : 0; exportProgressBar.style.width = pct + '%'; exportInfo.textContent = `Exporting: ${src.currentTime.toFixed(1)}s / ${duration.toFixed(1)}s`; if(pct<100 && !src.ended) requestAnimationFrame(progressTick); }
+  progressTick();
+  src.addEventListener('ended', ()=>{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }, {once:true});
+});
+
+popupCancelBtn.addEventListener('click', ()=>{ if(!exporting) return; exporting=false; try{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }catch(e){} src.pause(); exportInfo.textContent='Export cancelled'; statusEl.textContent='No export running'; popupCancelBtn.disabled=true; exportPopup.style.display='none'; src.loop = isLoop; });
+
+// ensure rendering continues
+window.addEventListener('focus', ()=>{ if(src && src.src && !raf) render(); });
+
+</script></body>
+</html>
