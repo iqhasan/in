@@ -48,7 +48,7 @@ body.dark  { background: #121212; color: #fff; }
   top: 53%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 300px;
+  width: 345px;
   max-width: 90vw;
   padding: 30px;
   text-align: center;
@@ -63,13 +63,13 @@ body.dark  { background: #121212; color: #fff; }
    Profile & Titles
 ========================= */
 .profile-pic {
-  width: 145px;
-  height: 145px;
+  width: 70%;
+  max-width: 200px;
+  height: auto;
   border-radius: 50%;
-  border: 4px solid #00FF39;
-  object-fit: cover;
+  display: block;
+  margin: 0 auto;
 }
-
 h1 { font-size: 28px; margin: 10px 0; }
 
 /* =========================
