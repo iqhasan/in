@@ -14,7 +14,7 @@ themeToggle.addEventListener('click', () => {
   document.body.classList.toggle('light');
 
   if (document.getElementById("sharePopup").classList.contains('active')) {
-    qrImage.src = document.body.classList.contains("dark") ? "dark.png" : "dark.png";
+    qrImage.src = document.body.classList.contains("dark") ? "dark.png" : "light.png";
   }
 });
 
