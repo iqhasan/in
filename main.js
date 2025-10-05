@@ -1,24 +1,37 @@
+/* -------------------------------------------
+   AUTO THEME (Day/Night) + MANUAL TOGGLE
+--------------------------------------------*/
 const themeToggle = document.getElementById('themeToggle');
 const animToggle  = document.getElementById('animToggle');
 const qrImage     = document.getElementById('qrImage');
 
-function setThemeInitial() {
-  if (!document.body.classList.contains('dark') && !document.body.classList.contains('light')) {
-    document.body.classList.add('dark');
+function applyAutoTheme() {
+  const hour = new Date().getHours();
+  const isDay = hour >= 6 && hour < 18;
+  const newTheme = isDay ? 'light' : 'dark';
+
+  if (!document.body.classList.contains(newTheme)) {
+    document.body.classList.remove('dark', 'light');
+    document.body.classList.add(newTheme);
+    if (document.getElementById("sharePopup").classList.contains('active')) {
+      qrImage.src = newTheme === "dark" ? "dark.png" : "light.png";
+    }
   }
 }
-setThemeInitial();
+applyAutoTheme();
+setInterval(applyAutoTheme, 60000);
 
 themeToggle.addEventListener('click', () => {
   document.body.classList.toggle('dark');
   document.body.classList.toggle('light');
-
   if (document.getElementById("sharePopup").classList.contains('active')) {
     qrImage.src = document.body.classList.contains("dark") ? "dark.png" : "light.png";
   }
 });
 
-/* Sidebar Menu */
+/* -------------------------------------------
+   SIDEBAR MENU
+--------------------------------------------*/
 const menuToggle   = document.getElementById('menuToggle');
 const sidebar      = document.getElementById('sidebar');
 const menuOverlay  = document.getElementById('menuOverlay');
@@ -36,7 +49,9 @@ menuToggle.addEventListener('click', openMenu);
 closeMenu.addEventListener('click', closeMenuFn);
 menuOverlay.addEventListener('click', closeMenuFn);
 
-/* Share Popup + QR + Copy */
+/* -------------------------------------------
+   SHARE POPUP + QR + COPY
+--------------------------------------------*/
 const shareBtns = document.querySelectorAll(".shareBtn");
 const sharePopup = document.getElementById("sharePopup");
 const shareOverlay = document.getElementById("shareOverlay");
@@ -48,7 +63,7 @@ shareBtns.forEach(btn => {
   btn.addEventListener("click", () => {
     const url = window.location.href;
     shareLinkInput.value = url;
-    qrImage.src = document.body.classList.contains("dark") ? "dark.png" : "dark.png";
+    qrImage.src = document.body.classList.contains("dark") ? "dark.png" : "light.png";
     sharePopup.classList.add("active");
     shareOverlay.classList.add("active");
     closeMenuFn();
@@ -72,7 +87,9 @@ copyShareBtn.addEventListener('click', () => {
   });
 });
 
-/* Toast */
+/* -------------------------------------------
+   TOAST
+--------------------------------------------*/
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
@@ -80,7 +97,9 @@ function showToast(message) {
   setTimeout(() => { toast.style.display = "none"; }, 3000);
 }
 
-/* Canvas Animations */
+/* -------------------------------------------
+   CANVAS ANIMATIONS
+--------------------------------------------*/
 const canvas = document.getElementById("bg");
 const ctx = canvas.getContext("2d");
 function resizeCanvas() {
@@ -146,7 +165,6 @@ function initParticles() {
 /* Fireworks */
 let fwArray = [];
 let fwParticles = [];
-
 function rand(min, max) { return Math.random() * (max - min) + min; }
 
 class Firework {
@@ -225,35 +243,28 @@ function animate() {
 initParticles();
 animate();
 
-/* ------------------------------
-   Tab Switching for Sidebar Menu
---------------------------------*/
+/* -------------------------------------------
+   TAB SWITCHING (Sidebar)
+--------------------------------------------*/
 const tabItems = document.querySelectorAll(".menu-item[data-target]");
 const tabContents = document.querySelectorAll(".tab-content");
-
-// Hide all initially
 tabContents.forEach(tc => tc.style.display = "none");
-
-// Show first tab by default
 if(tabContents[0]) tabContents[0].style.display = "block";
 
 tabItems.forEach(item => {
   item.addEventListener("click", () => {
     const targetId = item.getAttribute("data-target");
     if(!targetId) return;
-
-    // hide all tabs
     tabContents.forEach(tc => tc.style.display = "none");
-
-    // show target tab
     const targetTab = document.getElementById(targetId);
     if(targetTab) targetTab.style.display = "block";
-
-    // close sidebar
     closeMenuFn();
   });
 });
 
+/* -------------------------------------------
+   MORE POPUP
+--------------------------------------------*/
 (function() {
   const moreBtn = document.getElementById("moreBtn");
   const morePopup = document.getElementById("morePopup");
@@ -262,13 +273,11 @@ tabItems.forEach(item => {
   
   if (!moreBtn) return;
   
-  // Open popup
   moreBtn.addEventListener("click", () => {
     morePopup.classList.add("active");
     moreOverlay.classList.add("active");
   });
   
-  // Close popup on cross click
   if (closeMorePopup) {
     closeMorePopup.addEventListener("click", () => {
       morePopup.classList.remove("active");
@@ -276,7 +285,6 @@ tabItems.forEach(item => {
     });
   }
   
-  // Close popup on overlay click
   if (moreOverlay) {
     moreOverlay.addEventListener("click", () => {
       morePopup.classList.remove("active");
