@@ -11,6 +11,7 @@ html, body {
   overflow: auto;
   transition: background 0.4s, color 0.4s;
   font-size: 15pt;
+  transition: all 0.5s ease;
 }
 
 body.light { background: #f5f5f5; color: #000; }
@@ -443,4 +444,30 @@ body.dark .card{
 #shareLink {
   margin: 0;
   height: auto; /* খালি হলেও ফাঁক কমানো */
+}
+#cover{
+  padding: 0;
+}
+/* visitor counter in sidebar, same style as menu-item */
+#visitorBox {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255,255,255,0.08); /* menu-item background */
+  border: 1px solid #00FF45; /* menu-item border */
+  transition: all 0.5s ease;
+  cursor: default;
+}
+
+#visitorBox:hover {
+  background: rgba(255,255,255,0.15);
+  transform: scale(1.03);
+}
+body.light #visitorBox{
+  border-color: rgba(255, 0, 0, 1);
 }
