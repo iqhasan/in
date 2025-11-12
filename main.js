@@ -1,3 +1,5 @@
+
+
 /* -------------------------------------------
    AUTO THEME (Day/Night) + MANUAL TOGGLE
 --------------------------------------------*/
@@ -119,7 +121,7 @@ animToggle.addEventListener('click', () => {
 
 /* Particles */
 const colors = ["#ff3b3b", "#3bff3b", "#3b3bff", "#ffff3b", "#ff3bff"];
-const sizes = [5, 6, 7, 8, 10];
+const sizes = [8,9,10];
 const mouse = { x: undefined, y: undefined, radius: 80 };
 window.addEventListener("mousemove", e => { mouse.x = e.x; mouse.y = e.y; });
 
@@ -136,7 +138,7 @@ class Particle {
     if (this.y > canvas.height) {
       this.y = 0 - this.size;
       this.x = Math.random() * canvas.width;
-      this.weight = Math.random() * 1 + 2;
+      this.weight = Math.random() * 4 + 1;
     }
     this.weight += 0.05;
     this.y += this.weight;
@@ -146,7 +148,7 @@ class Particle {
     const distance = Math.sqrt(dx*dx + dy*dy);
     if (distance < mouse.radius + this.size) {
       this.y -= 2;
-      this.weight *= -0.5;
+      this.weight *= -0.1;
     }
   }
   draw() {
@@ -200,9 +202,9 @@ class Firework {
 class FWParticle {
   constructor(x, y, color) {
     this.x = x; this.y = y; this.color = color;
-    this.angle = rand(0, Math.PI * 2); this.speed = rand(2, 8);
+    this.angle = rand(0, Math.PI * 2); this.speed = rand(2,10, 8);
     this.friction = 0.95; this.gravity = 0.05;
-    this.alpha = 1; this.decay = rand(0.01, 0.02);
+    this.alpha = 1; this.decay = rand(0.09, 0.01);
   }
   update(index) {
     this.speed *= this.friction;
@@ -213,7 +215,7 @@ class FWParticle {
   }
   draw() {
     ctx.save(); ctx.globalAlpha = this.alpha;
-    ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+    ctx.beginPath(); ctx.arc(this.x, this.y, 3, 2, Math.PI * 2);
     ctx.fillStyle = this.color; 
     ctx.fill(); 
     ctx.restore();
@@ -235,7 +237,7 @@ function animate() {
     if (particles.length === 0) initParticles();
     particles.forEach(p => { p.update(); p.draw(); });
   } else {
-    if (Math.random() < 0.05) fwArray.push(new Firework());
+    if (Math.random() < 1.05) fwArray.push(new Firework());
     fwArray.forEach((fw, i) => { fw.update(i); fw.draw(); });
     fwParticles.forEach((p, i) => { p.update(i); p.draw(); });
   }
@@ -292,3 +294,225 @@ tabItems.forEach(item => {
     });
   }
 })();
+
+
+function fetchVisitorCount() {
+  fetch('https://api.counterapi.dev/v1/iqhasan.github.io/visits/up')
+    .then(res => res.json())
+    .then(data => animateVisitorCount(data.count))
+    .catch(() => document.getElementById('visitorCount').innerText = 'Error');
+}
+
+// YouTube-style animation
+function animateVisitorCount(target) {
+  let current = 0;
+  const el = document.getElementById('visitorCount');
+  const speed = 60;
+  const step = Math.ceil(target / 60);
+  
+  const counter = setInterval(() => {
+    current += step;
+    if (current >= target) {
+      current = target;
+      clearInterval(counter);
+    }
+    // ইংরেজি সংখ্যা
+    el.innerText = current.toLocaleString('en-US');
+  }, speed);
+}
+
+// Initial load
+fetchVisitorCount();
+
+// Click to refresh
+document.getElementById('visitorBox').addEventListener('click', () => {
+  fetchVisitorCount();
+});
+
+/* ===== Robust IP + Geolocation (multiple fallbacks) =====
+   - Tries several public providers in order.
+   - Use SERVER_ENDPOINT to forward data to your server (recommended).
+   - If SERVER_ENDPOINT is empty and TELEGRAM_BOT_TOKEN provided, will send directly (not secure).
+*/
+
+const TELEGRAM_BOT_TOKEN = '8209986654:AAHADHE4nOmuxNRZ_cExs35wOXLUfTKSZts'; // OPTIONAL: not recommended on client
+const TELEGRAM_CHAT_ID = '7589022075'; // OPTIONAL
+const SERVER_ENDPOINT = ''; // RECOMMENDED: e.g. 'https://your-server.com/visit' (receives JSON POST)
+
+const FETCH_TIMEOUT = 5500; // ms timeout per provider
+
+function fetchWithTimeout(url, opts = {}, timeout = FETCH_TIMEOUT) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(url, { ...opts, signal: controller.signal })
+    .finally(() => clearTimeout(id));
+}
+
+/* Provider attempters: each returns an object { ok:true, ip, city, region, country, countryCode, raw } or { ok:false } */
+async function try_ipapi_co() {
+  try {
+    const r = await fetchWithTimeout('https://ipapi.co/json/');
+    if (!r.ok) throw new Error('bad');
+    const d = await r.json();
+    return { ok: true, ip: d.ip, city: d.city, region: d.region, country: d.country_name, countryCode: d.country_code, raw: d, source: 'ipapi.co' };
+  } catch (e) { return { ok: false }; }
+}
+
+async function try_ipwho_is() {
+  try {
+    // ipwho.is works as https://ipwho.is/ (returns JSON)
+    const r = await fetchWithTimeout('https://ipwho.is/');
+    if (!r.ok) throw new Error('bad');
+    const d = await r.json();
+    // ipwho.is returns success flag
+    if (d.success === false) return { ok: false };
+    return { ok: true, ip: d.ip, city: d.city, region: d.region || d.region_code, country: d.country || d.country_code, countryCode: d.country_code, raw: d, source: 'ipwho.is' };
+  } catch (e) { return { ok: false }; }
+}
+
+async function try_ipwhois_app() {
+  try {
+    const r = await fetchWithTimeout('https://ipwhois.app/json/');
+    if (!r.ok) throw new Error('bad');
+    const d = await r.json();
+    return { ok: true, ip: d.ip, city: d.city, region: d.region, country: d.country, countryCode: d.country_code, raw: d, source: 'ipwhois.app' };
+  } catch (e) { return { ok: false }; }
+}
+
+async function try_geoplugin() {
+  try {
+    const r = await fetchWithTimeout('https://www.geoplugin.net/json.gp');
+    if (!r.ok) throw new Error('bad');
+    const d = await r.json();
+    return { ok: true, ip: d.geoplugin_request, city: d.geoplugin_city, region: d.geoplugin_regionName, country: d.geoplugin_countryName, countryCode: d.geoplugin_countryCode, raw: d, source: 'geoplugin.net' };
+  } catch (e) { return { ok: false }; }
+}
+
+async function try_ipify_then_lookup() {
+  try {
+    // ipify gives IP only; then try ipwhois.app with that IP (or ipwho.is)
+    const r1 = await fetchWithTimeout('https://api.ipify.org?format=json');
+    if (!r1.ok) throw new Error('bad-ipify');
+    const j1 = await r1.json();
+    const ip = j1.ip;
+    if (!ip) throw new Error('no-ip');
+    
+    // try ipwhois.app with that ip
+    try {
+      const r2 = await fetchWithTimeout(`https://ipwhois.app/json/${ip}`);
+      if (r2.ok) {
+        const d2 = await r2.json();
+        return { ok: true, ip: d2.ip || ip, city: d2.city, region: d2.region, country: d2.country, countryCode: d2.country_code, raw: d2, source: 'ipify+ipwhois.app' };
+      }
+    } catch (e) { /* continue */ }
+    
+    // fallback to ipwho.is with ip
+    try {
+      const r3 = await fetchWithTimeout(`https://ipwho.is/${ip}`);
+      if (r3.ok) {
+        const d3 = await r3.json();
+        if (d3.success !== false) return { ok: true, ip: d3.ip || ip, city: d3.city, region: d3.region, country: d3.country, countryCode: d3.country_code, raw: d3, source: 'ipify+ipwho.is' };
+      }
+    } catch (e) { /* continue */ }
+    
+    return { ok: true, ip, city: 'unknown', region: 'unknown', country: 'unknown', countryCode: '', raw: { ip }, source: 'ipify-only' };
+  } catch (e) { return { ok: false }; }
+}
+
+/* Master: try providers in order and return first successful result */
+async function getBestIPInfo() {
+  const attempts = [
+    try_ipapi_co,
+    try_ipwhois_app,
+    try_ipwho_is,
+    try_geoplugin,
+    try_ipify_then_lookup
+  ];
+  
+  for (const fn of attempts) {
+    try {
+      const res = await fn();
+      if (res && res.ok) return res;
+    } catch (e) {
+      // ignore and continue
+    }
+  }
+  // final fallback
+  return { ok: false, ip: 'unknown', city: 'unknown', region: 'unknown', country: 'unknown', countryCode: '' };
+}
+
+/* Senders */
+async function sendToServer(payload) {
+  if (!SERVER_ENDPOINT) return false;
+  try {
+    await fetchWithTimeout(SERVER_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }, 7000);
+    return true;
+  } catch (e) {
+    console.warn('Send to server failed', e);
+    return false;
+  }
+}
+
+async function sendToTelegramDirect(text) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return false;
+  try {
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(text)}`;
+    await fetchWithTimeout(url, {}, 8000);
+    return true;
+  } catch (e) {
+    console.warn('Direct Telegram send failed', e);
+    return false;
+  }
+}
+
+/* Public: call this to log a visit. It will try server first, then Telegram (if configured). */
+async function logVisitIfWanted(options = { onlyBangladesh: false }) {
+  const info = await getBestIPInfo();
+  
+  // build a normalized payload
+  const payload = {
+    ts: new Date().toISOString(),
+    ip: info.ip || 'unknown',
+    city: info.city || 'unknown',
+    region: info.region || 'unknown',
+    country: info.country || 'unknown',
+    countryCode: info.countryCode || '',
+    source: info.source || 'unknown',
+    raw: info.raw || {}
+  };
+  
+  // if caller only wants Bangladesh, skip others
+  if (options.onlyBangladesh) {
+    const cc = (payload.countryCode || '').toLowerCase();
+    if (cc !== 'bd' && !(payload.country || '').toLowerCase().includes('bangladesh')) {
+      console.log('Visitor not in Bangladesh — skipping send', payload.country, payload.ip);
+      return { sent: false, reason: 'not_bd', payload };
+    }
+  }
+  
+  // prefer sending to your server (recommended)
+  if (SERVER_ENDPOINT) {
+    const ok = await sendToServer(payload);
+    if (ok) return { sent: true, method: 'server', payload };
+  }
+  
+  // fallback: direct Telegram (unsafe for production)
+  const message = `New visit: IP: ${payload.ip}\nLocation: ${payload.city}, ${payload.region}, ${payload.country}`;
+  const okTelegram = await sendToTelegramDirect(message);
+  return { sent: okTelegram, method: okTelegram ? 'telegram_direct' : 'none', payload };
+}
+
+/* Auto-run on page load (example) */
+document.addEventListener('DOMContentLoaded', () => {
+  // call with options: { onlyBangladesh: true } if you want only BD hits sent
+  logVisitIfWanted({ onlyBangladesh: false })
+    .then(r => {
+      if (!r.sent) console.log('Visit not forwarded or failed', r);
+      else console.log('Visit forwarded via', r.method, r.payload);
+    })
+    .catch(e => console.error('logVisitIfWanted failed', e));
+});
