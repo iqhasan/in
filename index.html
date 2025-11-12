@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
- <head>
+<head>
   <!-- Basic Meta -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -69,6 +69,7 @@
   <!-- Theme Color (for mobile browsers) -->
   <meta name="theme-color" content="#0d0d0d" />
 </head>
+
 <body class="light">
   <!-- Background Canvas -->
   <canvas id="bg"></canvas>
@@ -91,13 +92,14 @@
   <div id="menuOverlay"></div>
   <aside class="sidebar" id="sidebar">
     <div class="top-row">
-      <h3>Site Menu</h3>
-      <span class="close-menu" id="closeMenu" title="Close">×</span>
+      <span class="close-menu" id="closeMenu" title="Close"></span>
     </div>
+    <img class="menu-item" id="cover" src="cover.png" alt="mb" />
     <nav class="menu-list">
       <a class="menu-item" data-target="tab-home">
   <i class="fa-solid fa-house"></i> <span>Home</span>
 </a>
+
 
 
 <a class="menu-item" data-target="tab-tools">
@@ -115,6 +117,11 @@
  <a class="menu-item" href="https://t.me/iqehasan" target="_blank">
   <i class="fa-brands fa-telegram"></i> <span>Telegram Group</span>
 </a>
+<div class="menu-item" id="visitorBox">
+  <i class="fa-solid fa-eye"></i>
+  <span>Visited:</span>
+  <span id="visitorCount">0</span>
+</div>
  </nav>
   </aside>
   
