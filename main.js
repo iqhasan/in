@@ -1,5 +1,209 @@
 
 
+
+
+
+
+/* ==============================
+   MARQUEE LANGUAGE SWITCH SYSTEM
+   For <marquee class="cx">
+================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  let marquee = document.querySelector(".cx");
+  const translateBtn = document.getElementById("translateBtn");
+
+  if (!marquee || !translateBtn) return;
+
+  const marqueeTexts = [
+    {
+      code: "bn",
+      name: "বাংলা",
+      text: `
+আল্লাহ ধৈর্যধারীদের সাথে আছেন।
+আল্লাহ সর্বজ্ঞ, কিছুই তাঁর অজানা নয়।
+আল্লাহর পরিকল্পনাই সর্বোত্তম।
+আল্লাহ যাকে ভালোবাসেন, তাকেই পরীক্ষা করেন।
+আল্লাহর রহমত সীমাহীন।
+আল্লাহর ন্যায়বিচার অচ্যুত।
+আল্লাহর স্মরণেই শান্তি।
+আল্লাহর উপর ভরসাই শক্তি।
+আল্লাহই রিজিকদাতা।
+আল্লাহ কারো উপর বিন্দুমাত্র জুলুম করেন না।
+আল্লাহ শ্রেষ্ঠ বিচারক।
+আল্লাহ উত্তম প্রতিদানকারী।
+      `
+    },
+    {
+      code: "en",
+      name: "English",
+      text: `
+Allah is with those who are patient.
+Allah is All-Knowing; nothing is hidden from Him.
+Allah’s plan is always the best.
+Allah tests those whom He loves.
+Allah’s mercy is limitless.
+Allah’s justice never fails.
+In the remembrance of Allah, hearts find peace.
+Trust in Allah is true strength.
+Allah alone is the Provider.
+Allah does not wrong anyone even by an atom.
+Allah is the best Judge.
+Allah is the best Rewarder.
+      `
+    },
+    {
+      code: "hi",
+      name: "हिंदी",
+      text: `
+अल्लाह धैर्य रखने वालों के साथ है।
+अल्लाह सर्वज्ञ है, उससे कुछ भी छिपा नहीं।
+अल्लाह की योजना ही सर्वोत्तम है।
+अल्लाह जिसे प्रेम करता है, उसकी परीक्षा लेता है।
+अल्लाह की दया असीम है।
+अल्लाह का न्याय अटल है।
+अल्लाह की याद में ही सुकून है।
+अल्लाह पर भरोसा ही असली ताक़त है।
+अल्लाह ही रोज़ी देने वाला है।
+अल्लाह किसी पर रत्ती भर भी ज़ुल्म नहीं करता।
+अल्लाह सबसे उत्तम न्यायाधीश है।
+अल्लाह सबसे अच्छा प्रतिफल देने वाला है।
+      `
+    },
+    {
+      code: "ur",
+      name: "اردو",
+      text: `
+اللہ صبر کرنے والوں کے ساتھ ہے۔
+اللہ سب کچھ جانتا ہے، اس سے کچھ بھی پوشیدہ نہیں۔
+اللہ کا منصوبہ ہی بہترین ہوتا ہے۔
+اللہ جس سے محبت کرتا ہے، اس کی آزمائش کرتا ہے۔
+اللہ کی رحمت بے حد ہے۔
+اللہ کا انصاف اٹل ہے۔
+اللہ کے ذکر میں ہی دلوں کو سکون ملتا ہے۔
+اللہ پر بھروسہ ہی اصل طاقت ہے۔
+اللہ ہی رزق دینے والا ہے۔
+اللہ کسی پر ذرہ برابر بھی ظلم نہیں کرتا۔
+اللہ سب سے بہترین فیصلہ کرنے والا ہے۔
+اللہ سب سے بہتر بدلہ دینے والا ہے۔
+      `
+    },
+    {
+      code: "ar",
+      name: "العربية",
+      text: `
+الله مع الصابرين.
+الله عليم بكل شيء ولا يخفى عليه شيء.
+خطة الله هي الأفضل دائمًا.
+الله يختبر من يحبهم.
+رحمة الله بلا حدود.
+عدل الله لا يتغير.
+بذكر الله تطمئن القلوب.
+التوكل على الله هو القوة الحقيقية.
+الله هو الرزاق.
+الله لا يظلم أحدًا ولو ذرة.
+الله خير الحاكمين.
+الله خير المجازين.
+      `
+    }
+  ];
+
+  let index = 0;
+
+  marquee.innerHTML = marqueeTexts[0].text;
+  marquee.setAttribute("direction", "left");
+
+  function switchLanguage() {
+    index = (index + 1) % marqueeTexts.length;
+    const lang = marqueeTexts[index];
+
+    // নতুন marquee তৈরি করা
+    const newMarquee = document.createElement("marquee");
+    newMarquee.className = "cx";
+    newMarquee.innerHTML = lang.text;
+
+    // ডিরেকশন ঠিক করা
+    if (lang.code === "ur" || lang.code === "ar") {
+      newMarquee.setAttribute("direction", "right");
+    } else {
+      newMarquee.setAttribute("direction", "left");
+    }
+
+    // পুরানো marquee একই জায়গায় প্রতিস্থাপন করা
+    const parent = marquee.parentNode;
+    const nextSibling = marquee.nextSibling;
+    marquee.remove();
+    if (nextSibling) {
+      parent.insertBefore(newMarquee, nextSibling);
+    } else {
+      parent.appendChild(newMarquee);
+    }
+
+    marquee = newMarquee;
+
+    showToast(lang.name);
+  }
+
+  function showToast(text) {
+    let toast = document.getElementById("langToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "langToast";
+      toast.style.position = "fixed";
+      toast.style.top = "70px";
+      toast.style.right = "20px";
+      toast.style.padding = "8px 14px";
+      toast.style.borderRadius = "20px";
+      toast.style.background = "rgba(0,0,0,0.65)";
+      toast.style.color = "#fff";
+      toast.style.fontSize = "13px";
+      toast.style.zIndex = "9999";
+      toast.style.opacity = "0";
+      toast.style.transition = "opacity 0.3s ease";
+      document.body.appendChild(toast);
+    }
+
+    toast.innerText = text;
+    toast.style.opacity = "1";
+    setTimeout(() => toast.style.opacity = "0", 2000);
+  }
+
+  translateBtn.addEventListener("click", switchLanguage);
+
+});
+/* toast display */
+function showLangToast(text) {
+  if (!toast) return;
+  toast.innerText = text;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2000);
+}
+
+/* language switch */
+function switchLanguage() {
+  if (!translateSelect) {
+    waitForTranslateSelect(switchLanguage);
+    return;
+  }
+
+  currentLangIndex = (currentLangIndex + 1) % languages.length;
+  const lang = languages[currentLangIndex];
+
+  translateSelect.value = lang.code;
+  translateSelect.dispatchEvent(new Event("change"));
+
+  showLangToast(lang.name);
+}
+
+/* bind click */
+if (translateBtn) {
+  translateBtn.addEventListener("click", switchLanguage);
+}
+
 /* -------------------------------------------
    AUTO THEME (Day/Night) + MANUAL TOGGLE
 --------------------------------------------*/
@@ -21,7 +225,7 @@ function applyAutoTheme() {
   }
 }
 applyAutoTheme();
-setInterval(applyAutoTheme, 60000);
+setInterval(applyAutoTheme, 2000);
 
 themeToggle.addEventListener('click', () => {
   document.body.classList.toggle('dark');
@@ -121,7 +325,7 @@ animToggle.addEventListener('click', () => {
 
 /* Particles */
 const colors = ["#ff3b3b", "#3bff3b", "#3b3bff", "#ffff3b", "#ff3bff"];
-const sizes = [8,9,10];
+const sizes = [1,2,3,4,5,6,7,8,9];
 const mouse = { x: undefined, y: undefined, radius: 80 };
 window.addEventListener("mousemove", e => { mouse.x = e.x; mouse.y = e.y; });
 
@@ -131,16 +335,16 @@ class Particle {
     this.y = Math.random() * canvas.height;
     this.size = sizes[Math.floor(Math.random() * sizes.length)];
     this.color = colors[Math.floor(Math.random() * colors.length)];
-    this.weight = Math.random() * 1 + 1;
-    this.directionX = Math.random() * 4 - 2;
+    this.weight = Math.random() *  + 1;
+    this.directionX = Math.random() * 1 - 2;
   }
   update() {
     if (this.y > canvas.height) {
       this.y = 0 - this.size;
       this.x = Math.random() * canvas.width;
-      this.weight = Math.random() * 4 + 1;
+      this.weight = Math.random() * 1 + 3;
     }
-    this.weight += 0.05;
+    this.weight += 0.1;
     this.y += this.weight;
     this.x += this.directionX;
     const dx = this.x - (mouse.x ?? -9999);
@@ -148,7 +352,7 @@ class Particle {
     const distance = Math.sqrt(dx*dx + dy*dy);
     if (distance < mouse.radius + this.size) {
       this.y -= 2;
-      this.weight *= -0.1;
+      this.weight *= -0.5;
     }
   }
   draw() {
@@ -171,15 +375,15 @@ function rand(min, max) { return Math.random() * (max - min) + min; }
 
 class Firework {
   constructor() {
-    this.x = canvas.width / 2;
+    this.x = canvas.width / 20;
     this.y = canvas.height;
     this.targetX = rand(100, canvas.width - 100);
     this.targetY = rand(100, canvas.height / 2);
-    this.speed = 5;
+    this.speed = 3;
     this.angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
     this.distanceToTarget = Math.hypot(this.targetX - this.x, this.targetY - this.y);
     this.traveled = 0;
-    this.color = `hsl(${rand(0,360)},100%,50%)`;
+    this.color = `hsl(${rand(1,500)},100%,50%)`;
   }
   update(index) {
     const vx = Math.cos(this.angle) * this.speed;
@@ -202,7 +406,7 @@ class Firework {
 class FWParticle {
   constructor(x, y, color) {
     this.x = x; this.y = y; this.color = color;
-    this.angle = rand(0, Math.PI * 2); this.speed = rand(2,10, 8);
+    this.angle = rand(0, Math.PI * 2); this.speed = rand(2,12, 8);
     this.friction = 0.95; this.gravity = 0.05;
     this.alpha = 1; this.decay = rand(0.09, 0.01);
   }
@@ -222,7 +426,7 @@ class FWParticle {
   }
 }
 function createFWParticles(x, y, color) {
-  let count = 100;
+  let count = 160;
   while (count--) fwParticles.push(new FWParticle(x, y, color));
 }
 
@@ -237,7 +441,7 @@ function animate() {
     if (particles.length === 0) initParticles();
     particles.forEach(p => { p.update(); p.draw(); });
   } else {
-    if (Math.random() < 1.05) fwArray.push(new Firework());
+    if (Math.random() < 0.2) fwArray.push(new Firework());
     fwArray.forEach((fw, i) => { fw.update(i); fw.draw(); });
     fwParticles.forEach((p, i) => { p.update(i); p.draw(); });
   }
@@ -499,6 +703,8 @@ async function logVisitIfWanted(options = { onlyBangladesh: false }) {
     const ok = await sendToServer(payload);
     if (ok) return { sent: true, method: 'server', payload };
   }
+  
+  
   
   // fallback: direct Telegram (unsafe for production)
   const message = `New visit: IP: ${payload.ip}\nLocation: ${payload.city}, ${payload.region}, ${payload.country}`;
