@@ -40,7 +40,7 @@ body.dark  { background: #121212; color: #fff; }
 .menu-toggle { left: 15px; }
 .theme-toggle { right: 15px; }
 .anim-toggle { right: 60px; }
-.translate-toggle{ left: 280px;}
+.translate-toggle{ right: 105px;}
 /* =========================
    Main Container
 ========================= */
